@@ -248,7 +248,7 @@ extern const coap_resource_path_t path_well_known_core; // = {2, {".well-known",
     func_handle_get, path_get,                                      \
     COAP_SET_CONTENTTYPE(content_type)}
 // TODO: PUT macro still untested
-#define COAP_RESOURCE_PUT(func_handle_get, path_put, content_type)            \
-{COAP_RDY, COAP_METHOD_GET, COAP_TYPE_ACK,                          \
+#define COAP_RESOURCE_PUT(func_handle_put, path_put, content_type)            \
+{COAP_RDY, COAP_METHOD_PUT, COAP_TYPE_ACK,                          \
     func_handle_put, path_put,                                      \
     COAP_SET_CONTENTTYPE(content_type)}
