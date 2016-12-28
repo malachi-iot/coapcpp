@@ -123,15 +123,35 @@ public:
 };
 
 
+template <class TResult>
+class OperationResult
+{
+protected:
+    TResult result;
+    
+public:
+    operator TResult() { return result; }
+    
+    // get result of last operation
+    TResult getResult() { return result; }
+};
+
+
+
 // TODO: figure out error handling
-class CoapRequest : public CoapPacket
+class CoapRequest : public CoapPacket, public OperationResult<coap_state_t>
 {
 public:
+    CoapRequest(const uint8_t* rawUDPbuffer, const size_t buflen)
+    {
+        result = parse(rawUDPbuffer, buflen);
+    }
+    
     CoapRequest(const uint16_t msgid, const coap_buffer_t* tok,
        const coap_resource_t *resource,
        const uint8_t *content, const size_t content_len)
     {
-        makeRequest(msgid, tok, resource, content, content_len);
+        result = makeRequest(msgid, tok, resource, content, content_len);
     }
 };
 
@@ -156,6 +176,11 @@ class CoapManager
 public:
     CoapManager()
     {
+        static_assert(resources != NULL, 
+            "CoapManager must have resources assigned to it");
+        static_assert(rsplen > 0,
+            "rsplen must be > 0");
+            
         coap_make_link_format(resources, rsp, rsplen);
     }
 

@@ -8,6 +8,10 @@
 #include <lwip/udp.hpp>
 #include <lwip/api.hpp>
 
+#ifndef ASSERT
+#define ASSERT(condition, message)
+#endif
+
 namespace yacoap
 {
     using namespace FactUtilEmbedded::std;
@@ -70,9 +74,7 @@ namespace yacoap
         void handler(lwip::Netconn& netconn, lwip::Netbuf& nbClient)
         {
             int n, rc;
-            // If I put this pkt and the other one on the stack, high speed requests
-            // crash the device
-            static CoapPacket request;
+            //CoapPacket request;
 
             //TODO: operate directly on buffer
             u16_t copied_len = nbClient.copy(buf, sizeof(buf));
@@ -99,12 +101,14 @@ namespace yacoap
             printf("\n");
 #endif
 
-            if ((rc = request.parse(buf, n)) > COAP_ERR)
-                printf("Bad packet rc=%d\n", rc);
+            CoapRequest request(buf, n);
+
+            if (request.getResult() > COAP_ERR)
+                clog << "Bad packet rc=" << request.getResult() << endl;
             else
             {
                 size_t buflen = sizeof(buf);
-                static CoapPacket response;
+                CoapPacket response;
 #ifdef YACOAP_DEBUG
                 request.dump();
 #endif
@@ -133,8 +137,11 @@ namespace yacoap
                     clog << "netbuf_ref result: " << (uint16_t)err << endl; */
                     err_t err = netconn.sendTo(nb, nbClient);
 
-                    clog << "netconn_sendto result: " << (uint16_t)err << endl;
+                    ASSERT(err == 0, "netconn send error: " << err);
+                    
+                    //clog << "netconn_sendto result: " << (uint16_t)err << endl;
 
+                    //nb.free();
                     // This delete operation crashes it... not sure why
                     //netbuf_delete(_nb2);
                     // not well documented, but seems that ref bufs you call FREE instead
