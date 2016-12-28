@@ -11,6 +11,8 @@
 namespace yacoap
 {
     using namespace FactUtilEmbedded::std;
+    
+    //static uint8_t buf[1024]
 
     template <const coap_resource_t* resources, size_t rsplen = 128>
     class CoapServer
@@ -23,6 +25,13 @@ namespace yacoap
         uint8_t buf[1024];
 
     public:
+        int handle_get_well_known_core(const coap_resource_t *resource,
+                                              const coap_packet_t *inpkt,
+                                              coap_packet_t *pkt)
+        {
+            return manager.handle_get_well_known_core(resource, inpkt, pkt);
+        }
+        
         // this is a BLOCKING handler, designed for an RTOS
         void handler()
         {
@@ -63,15 +72,22 @@ namespace yacoap
             int n, rc;
             // If I put this pkt and the other one on the stack, high speed requests
             // crash the device
-            static yacoap::CoapPacket _pkt;
+            static CoapPacket _pkt;
 
             //TODO: operate directly on buffer
             u16_t copied_len = nbClient.copy(buf, sizeof(buf));
+            n = copied_len;
+            /* zero-copy mode.  Not ready yet but testing suggests
+               that datagram copy() vs data() size are the same , however I wouldn't 
+               count on that cross platform */
+            /*
             void* chainBuf;
             u16_t chainLen;
             nbClient.data(&chainBuf, &chainLen);
             n = nbClient.len();
-
+            //uint8_t* buf = (uint8_t*)chainBuf; // not ready for primetime due to response building
+            */
+            
             /*
             cout << "Chain len: " << (uint16_t) chainLen << endl;
             cout << "Copied len: " << (uint16_t) copied_len << endl;
@@ -88,7 +104,7 @@ namespace yacoap
             else
             {
                 size_t buflen = sizeof(buf);
-                static yacoap::CoapPacket _rsppkt;
+                static CoapPacket _rsppkt;
 #ifdef YACOAP_DEBUG
                 _pkt.dump();
 #endif
@@ -108,10 +124,9 @@ namespace yacoap
 #endif
 
                     lwip::Netbuf nb(buf, buflen);
-                    //netbuf* _nb2 = netbuf_new();
+                    /*
                     auto addr = nbClient.fromAddr();
                     uint16_t port = nbClient.fromPort();
-                    /*
                     clog << "addr: " << *addr << endl;
                     clog << "port: " << port << endl;
                     clog << "buf: " << (void*)buf << "length: " << (uint16_t)buflen << endl;
