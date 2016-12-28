@@ -58,9 +58,17 @@ inline coap_state_t coap_make_badrequest_response(const coap_packet_t* inpkt, co
 // helper class
 class CoapPacket
 {
+protected:
     coap_packet_t packet;
 
 public:
+    coap_state_t makeRequest(const uint16_t msgid, const coap_buffer_t* tok,
+                                   const coap_resource_t *resource,
+                                   const uint8_t *content, const size_t content_len)
+    {
+        return coap_make_request(msgid, tok, resource, content, content_len, &packet);
+    }
+    
     coap_state_t makeResponse(coap_packet_t* inpkt,
         const coap_msgtype_t msgtype,
         const coap_responsecode_t rspcode,
@@ -95,6 +103,7 @@ public:
         return coap_build(&packet, buf, buflen);
     }
 
+    // parse contents of buf into this packet
     coap_state_t parse(const uint8_t *buf, const size_t buflen)
     {
         return coap_parse(buf, buflen, &packet);
@@ -112,6 +121,27 @@ public:
         return packet;
     }
 };
+
+
+// TODO: figure out error handling
+class CoapRequest : public CoapPacket
+{
+public:
+    CoapRequest(const uint16_t msgid, const coap_buffer_t* tok,
+       const coap_resource_t *resource,
+       const uint8_t *content, const size_t content_len)
+    {
+        makeRequest(msgid, tok, resource, content, content_len);
+    }
+};
+
+
+/*
+class CoapResponse : public CoapPacket
+{
+public:
+    CoapResponse()
+}; */
 
 // Like a server, but only the resource component - the request/response
 // has to be initiated from outside (thus staying platform-independent in

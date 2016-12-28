@@ -72,7 +72,7 @@ namespace yacoap
             int n, rc;
             // If I put this pkt and the other one on the stack, high speed requests
             // crash the device
-            static CoapPacket _pkt;
+            static CoapPacket request;
 
             //TODO: operate directly on buffer
             u16_t copied_len = nbClient.copy(buf, sizeof(buf));
@@ -99,18 +99,18 @@ namespace yacoap
             printf("\n");
 #endif
 
-            if ((rc = _pkt.parse(buf, n)) > COAP_ERR)
+            if ((rc = request.parse(buf, n)) > COAP_ERR)
                 printf("Bad packet rc=%d\n", rc);
             else
             {
                 size_t buflen = sizeof(buf);
-                static CoapPacket _rsppkt;
+                static CoapPacket response;
 #ifdef YACOAP_DEBUG
-                _pkt.dump();
+                request.dump();
 #endif
-                manager.handleRequest(_pkt, _rsppkt);
+                manager.handleRequest(request, response);
 
-                if ((rc = _rsppkt.build(buf, &buflen)) > COAP_ERR)
+                if ((rc = response.build(buf, &buflen)) > COAP_ERR)
                     printf("coap_build failed rc=%d\n", rc);
                 else
                 {
@@ -120,7 +120,7 @@ namespace yacoap
                     printf("\n");
     #endif
 #ifdef YACOAP_DEBUG
-                    _rsppkt.dump();
+                    response.dump();
 #endif
 
                     lwip::Netbuf nb(buf, buflen);
