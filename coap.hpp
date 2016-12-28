@@ -100,10 +100,12 @@ public:
         return coap_parse(buf, buflen, &packet);
     }
 
+#if YACOAP_DEBUG
     void dump()
     {
         coap_dump_packet(&packet);
     }
+#endif
 
     operator coap_packet_t&()
     {
