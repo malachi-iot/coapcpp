@@ -101,6 +101,7 @@ namespace yacoap
             printf("\n");
 #endif
 
+            // this parses the buffer
             CoapRequest request(buf, n);
 
             if (request.getResult() > COAP_ERR)
@@ -120,15 +121,26 @@ namespace yacoap
                 else
                 {
     #ifdef YACOAP_DEBUG
-                    printf("Sending: ");
+                    clog << "Sending: " << (uint16_t) buflen << endl;
                     coap_dump(buf, buflen, true);
-                    printf("\n");
+                    clog << endl;
     #endif
 #ifdef YACOAP_DEBUG
                     response.dump();
 #endif
 
+#ifdef DEBUG_REF
+                    // love the zero-copy ref, but I can't get it to work reliably
+                    // I can't issue free/delete on it and memory corruption occurs
+                    // when using it + sendto
                     lwip::Netbuf nb(buf, buflen);
+#else
+                    lwip::Netbuf nb;
+                    
+                    void* newbuf = nb.alloc(buflen);
+                    
+                    memcpy(newbuf, buf, buflen);
+#endif
 
                     manager.rspDiagnostic();
 
@@ -154,6 +166,9 @@ namespace yacoap
                     
                     //clog << "netconn_sendto result: " << (uint16_t)err << endl;
 
+#ifndef DEBUG_REF
+                    nb.del();
+#endif
                     //nb.free();
                     // This delete operation crashes it... not sure why
                     //netbuf_delete(_nb2);
