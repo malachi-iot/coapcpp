@@ -183,6 +183,15 @@ public:
             
         coap_make_link_format(resources, rsp, rsplen);
     }
+    
+#ifdef DEBUG
+    void rspDiagnostic()
+    {
+        clog << "rsp len = " << (uint16_t)strlen(rsp) << endl;
+    }
+#else
+    void rspDiagnostic() {} 
+#endif
 
     coap_state_t handleRequest(
         const coap_packet_t *inpkt,

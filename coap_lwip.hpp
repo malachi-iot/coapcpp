@@ -42,7 +42,7 @@ namespace yacoap
             clog << "Waiting..." << endl;
 
             lwip::Netconn netconn(NETCONN_UDP);
-
+            
             if(!netconn.isAllocated())
             {
                 cerr << "Failed to allocate socket";
@@ -112,6 +112,7 @@ namespace yacoap
 #ifdef YACOAP_DEBUG
                 request.dump();
 #endif
+
                 manager.handleRequest(request, response);
 
                 if ((rc = response.build(buf, &buflen)) > COAP_ERR)
@@ -128,6 +129,9 @@ namespace yacoap
 #endif
 
                     lwip::Netbuf nb(buf, buflen);
+
+                    manager.rspDiagnostic();
+
                     /*
                     auto addr = nbClient.fromAddr();
                     uint16_t port = nbClient.fromPort();
@@ -135,7 +139,16 @@ namespace yacoap
                     clog << "port: " << port << endl;
                     clog << "buf: " << (void*)buf << "length: " << (uint16_t)buflen << endl;
                     clog << "netbuf_ref result: " << (uint16_t)err << endl; */
+#ifdef DEBUG
+                    netbuf* _netbuf_to = nbClient;
+                    netbuf* _netbuf_from = nb;
+                    
+                    err_t err = netconn_sendto(netconn, _netbuf_from,
+                        netbuf_fromaddr(_netbuf_to), netbuf_fromport(_netbuf_to));
+#else
                     err_t err = netconn.sendTo(nb, nbClient);
+#endif
+                    manager.rspDiagnostic();
 
                     ASSERT(err == 0, "netconn send error: " << err);
                     
