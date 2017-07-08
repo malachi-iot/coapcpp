@@ -202,6 +202,8 @@ public:
     }
 
 
+    // FIX: aggressive casting with multiple inheritance might cause us
+    // some issues
     coap_state_t handleRequest(
         CoapPacket& inpkt,
         CoapPacket& pkt)
